@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Graph Explorer</title>
+    <meta charset="utf-8">
+</head>
+    <style>
+
+        html, body {
+            height: 100%;
+        }
+
+        #graph-explorer {
+            overflow:hidden;
+            margin:0;
+            position:absolute;
+            top:0;
+            left:0;
+            bottom:0;
+            right:0;
+            background-color: #f7f7f7;
+        }
+
+        text {
+            font-family: sans-serif;
+            pointer-events: none;
+        }
+
+    </style>
+    <body>
+        <div id="graph-explorer"></div>
+    </body>
+    <footer>
+        <script type="application/javascript" src="bower_components/d3/d3.js"></script>
+        <script type="application/javascript" src="src/graph-explorer.js"></script>
+    </footer>
+</html>
