@@ -1,5 +1,8 @@
-var w = window.innerWidth;
-var h = window.innerHeight;
+var targetContainer = d3.select("#graph-explorer");
+
+var w = Number(targetContainer.style('width').replace('px','')),
+    h = Number(targetContainer.style('height').replace('px',''));
+
 var keyc = true, keys = true, keyt = true, keyr = true, keyx = true, keyd = true, keyl = true, keym = true, keyh = true, key1 = true, key2 = true, key3 = true, key0 = true
 var focus_node = null, highlight_node = null;
 var text_center = false;
@@ -18,7 +21,7 @@ var size = d3.scale.pow().exponent(1)
 
 var force = d3.layout.force()
     .linkDistance(60)
-    .charge(-300)
+    .charge(-800)
     .size([w,h]);
 var default_node_color = "#ccc";
 //var default_node_color = "rgb(3,190,100)";
@@ -31,7 +34,7 @@ var max_stroke = 4.5;
 var max_base_node_size = 36;
 var min_zoom = 0.1;
 var max_zoom = 7;
-var svg = d3.select("#graph-explorer").append("svg");
+var svg = targetContainer.append("svg");
 
 console.log(svg);
 
