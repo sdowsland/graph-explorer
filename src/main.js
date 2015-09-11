@@ -1,12 +1,11 @@
 var d3 = require('d3'),
-    options = require('./options.js');
+    options = require('./options.js'),
+    Graph = require('./graph.js');
 
-d3.json("examples/data/data.json", function(error, graph) {
+d3.json("examples/data/data.json", function(error, data) {
 
-    console.log('Graph Data');
-    console.log(graph);
+    console.log(Graph);
 
-    console.log('Options');
-    console.log(options);
+    Graph.init('#graph-explorer', data.nodes, data.links, options);
 
 });
