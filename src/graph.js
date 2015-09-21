@@ -1,36 +1,33 @@
 'use strict';
 
+var Defaults = require('./defaults.js');
+
 module.exports = (function () {
 
-    var Graph = function(element, nodes, links, options){
-        //console.log(nodes);
-        //console.log(links);
+    var Graph = function(nodes, links, options){
 
-        var svg = d3.select(element).append("svg");
+        var settings = Defaults.extend({}, Defaults, options);
 
-        element = document.getElementById(element.replace('#',''));
+        var svg = d3.select(settings.element).append("svg");
+
+        var element = document.getElementById(settings.element.replace('#',''));
 
         svg.attr("width", element.offsetWidth);
         svg.attr("height", element.offsetHeight);
 
         var color = d3.scale.category20();
 
-
-        console.log(element.offsetWidth);
-        console.log(element.offsetHeight);
-
-        var force = d3.layout.force()
+        var graph = d3.layout.force()
             .nodes(nodes)
             .links(links)
             .size([element.offsetWidth, element.offsetHeight])
-            .linkStrength(0.1)
-            .friction(0.9)
-            .linkDistance(20)
-            .charge(-30)
-            .gravity(0.1)
-            .theta(0.8)
-            .alpha(0.1)
-            .start();
+            .linkStrength(settings.linkStrength)
+            .friction(settings.friction)
+            .linkDistance(settings.linkDistance)
+            .charge(settings.charge)
+            .gravity(settings.gravity)
+            .theta(settings.theta)
+            .alpha(settings.alpha);
 
         var link = svg.selectAll(".link")
             .data(links)
@@ -44,12 +41,12 @@ module.exports = (function () {
             .attr("class", "node")
             .attr("r", 5)
             .style("fill", function(d) { return color(d.type); })
-            .call(force.drag);
+            .call(graph.drag);
 
         node.append("title")
             .text(function(d) { return d.id; });
 
-        force.on("tick", function() {
+        graph.on("tick", function() {
             link.attr("x1", function(d) { return d.source.x; })
                 .attr("y1", function(d) { return d.source.y; })
                 .attr("x2", function(d) { return d.target.x; })
@@ -59,8 +56,7 @@ module.exports = (function () {
                 .attr("cy", function(d) { return d.y; });
         });
 
-
-        console.log(force);
+        graph.start();
     };
 
     Graph.prototype = {
