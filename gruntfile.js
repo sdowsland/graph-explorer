@@ -10,7 +10,10 @@ module.exports = function(grunt) {
         browserify: {
             main: {
                 src: 'src/main.js',
-                dest: 'dist/graph-explorer.js'
+                dest: 'dist/graph-explorer.js',
+                options: {
+                    exclude: ['d3']
+                }
             }
         },
         watch: {

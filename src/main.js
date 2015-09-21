@@ -1,5 +1,4 @@
-var d3 = require('d3'),
-    Graph = require('./graph.js');
+var Graph = require('./graph.js');
 
 d3.json("examples/data/data.json", function(error, data) {
 
