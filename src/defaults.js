@@ -12,7 +12,10 @@ module.exports = (function () {
         theta: 0.8,
         alpha: 0.1,
         linkColour: '#999',
-        linkOpacity: 0.6
+        linkOpacity: 0.6,
+        minZoom: 0.5,
+        maxZoom: 8,
+        enableCentering: true
     };
 
     Defaults.extend = function () {
