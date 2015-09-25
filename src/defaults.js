@@ -3,19 +3,23 @@
 module.exports = (function () {
 
     var Defaults = {
-        element: 'body',
-        linkStrength: 0.5,
-        friction: 0.9,
-        linkDistance: 60,
-        charge: -120,
-        gravity: 0.01,
-        theta: 0.8,
         alpha: 0.1,
+        charge: -120,
+        element: 'body',
+        enableCentering: true,
+        friction: 0.9,
+        gravity: 0.01,
         linkColour: '#464646',
+        linkDistance: 60,
         linkOpacity: 0.6,
-        minZoom: 0.5,
+        linkStrength: 0.5,
         maxZoom: 8,
-        enableCentering: true
+        minZoom: 0.5,
+        nodeFadeOnMouseOver: true,
+        nodeRadius: 10,
+        nodeStrokeColour: '#ffffff',
+        nodeStrokeWidth: '1px',
+        theta: 0.8
     };
 
     Defaults.extend = function () {

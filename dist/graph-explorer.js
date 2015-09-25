@@ -2278,19 +2278,23 @@ module.exports = isArray;
 module.exports = (function () {
 
     var Defaults = {
-        element: 'body',
-        linkStrength: 0.5,
-        friction: 0.9,
-        linkDistance: 60,
-        charge: -120,
-        gravity: 0.01,
-        theta: 0.8,
         alpha: 0.1,
+        charge: -120,
+        element: 'body',
+        enableCentering: true,
+        friction: 0.9,
+        gravity: 0.01,
         linkColour: '#464646',
+        linkDistance: 60,
         linkOpacity: 0.6,
-        minZoom: 0.5,
+        linkStrength: 0.5,
         maxZoom: 8,
-        enableCentering: true
+        minZoom: 0.5,
+        nodeFadeOnMouseOver: true,
+        nodeRadius: 10,
+        nodeStrokeColour: '#ffffff',
+        nodeStrokeWidth: '1px',
+        theta: 0.8
     };
 
     Defaults.extend = function () {
@@ -2404,13 +2408,14 @@ module.exports = (function () {
             .enter().append("svg:marker")    // This section adds in the arrows
             .attr("id", String)
             .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 27.5)
+            .attr("refX", 27)
             .attr("refY", 0)
             .attr("markerWidth", 6)
             .attr("markerHeight", 6)
             .attr("orient", "auto")
             .append("svg:path")
-            .attr("d", "M0,-5L10,0L0,5");
+            .attr("d", "M0,-5L10,0L0,5")
+            .style('fill', settings.linkColour);
 
         var color = d3.scale.category20();
 
@@ -2438,23 +2443,35 @@ module.exports = (function () {
             .data(nodes)
             .enter().append('circle')
             .attr('class', 'node')
-            .attr('r', 10)
+            .attr('r', settings.nodeRadius)
             .style('fill', function(d) { return color(d.type); })
+            .style('stroke', settings.nodeStrokeColour)
+            .style('stroke-width', settings.nodeStrokeWidth)
             .call(graph.drag);
 
         node.append('title')
             .text(function(d) { return d.id; });
 
-        node.on('mouseover', function(d) {
+        node.on('mouseover', function(d)
+            {
+                if(settings.nodeFadeOnMouseOver){
+                    node.transition().duration(300).style('opacity', function(o){
+                        return d == o || utils.isConnected(d, o) ? '1' : '0.25';
+                    });
 
-                node.transition().duration(300).style('opacity', function(o){
-                    return d == o || utils.isConnected(d, o) ? '1' : '0.25';
-                });
+                    link.transition().duration(300).style('opacity', function(o){
+                        return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+                    });
+                }
+                else {
+                    node.style('opacity', function(o){
+                        return d == o || utils.isConnected(d, o) ? '1' : '0.25';
+                    });
 
-                link.transition().duration(300).style('opacity', function(o){
-                    return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
-                });
-
+                    link.style('opacity', function(o){
+                        return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+                    });
+                }
             })
             .on('mousedown', function(d) {
                 d3.event.stopPropagation();
@@ -2462,20 +2479,20 @@ module.exports = (function () {
             })
             .on('mouseout', function(d) {
 
-                node.transition().duration(300).style('opacity',  '1');
-                link.transition().duration(300).style('opacity',  '1');
+                if(settings.nodeFadeOnMouseOver){
+                    node.transition().duration(300).style('opacity',  '1');
+                    link.transition().duration(300).style('opacity',  '1');
+                }
+                else {
+                    node.style('opacity',  '1');
+                    link.style('opacity',  '1');
+                }
 
             });
 
         if(settings.enableCentering) {
 
             node.on('dblclick.zoom', function(d) {
-
-                console.log('Enable Centering: ' + settings.enableCentering);
-
-
-                console.log(d);
-
                 d3.event.stopPropagation();
                 var dcx = (width/2-d.x*zoom.scale());
                 var dcy = (height/2-d.y*zoom.scale());
@@ -2493,8 +2510,6 @@ module.exports = (function () {
 
             node.attr('cx', function(d) { return d.x; })
                 .attr('cy', function(d) { return d.y; });
-
-
         });
 
         zoom.on('zoom', function() {
@@ -2536,8 +2551,7 @@ var Graph = require('./graph.js');
 d3.json("examples/data/data.json", function(error, data) {
 
     var options = {
-        element: '#graph-explorer',
-        gravity: 0.01
+        element: '#graph-explorer'
     };
 
     var graph = new Graph(data.nodes, data.links, options);
