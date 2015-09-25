@@ -51,14 +51,20 @@ module.exports = (function () {
         node.append('title')
             .text(function(d) { return d.id; });
 
-        node.on("mouseover", function(d) {
-                //Utils.mouseover(d);
+        node.on('mouseover', function(d) {
+
+                node.style('stroke', function(o) {
+                    return d ==o || utils.isConnected(d, o) ? 'blue' : 'white';
+                });
+
             })
-            .on("mousedown", function(d) {
+            .on('mousedown', function(d) {
                 d3.event.stopPropagation();
                 utils.mousedown(d);
             })
-            .on("mouseout", function(d) {
+            .on('mouseout', function(d) {
+
+                node.style('stroke', 'white');
 
             });
 
@@ -92,10 +98,8 @@ module.exports = (function () {
 
         });
 
-        zoom.on("zoom", function() {
-
-            console.log('Zooooooom');
-            g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+        zoom.on('zoom', function() {
+            g.attr('transform', 'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')');
         });
 
         svg.call(zoom);
@@ -107,7 +111,7 @@ module.exports = (function () {
             var w = width,
                 h = height;
 
-            svg.attr("width", w).attr("height", h);
+            svg.attr('width', w).attr('height', h);
 
             graph.size([graph.size()[0]+(w-width)/zoom.scale(),graph.size()[1]+(h-height)/zoom.scale()]).resume();
 

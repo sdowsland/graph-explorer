@@ -1,48 +1,39 @@
 'use strict';
 
+var _where = require('lodash.where');
+
 module.exports = (function(){
 
     var nodes,
         links,
         settings;
 
-    function log(message){
-        console.log(message);
-    }
-
     var Utils = function(n, l, s){
         nodes = n;
         links = l;
-        settings = s
+        settings = s;
     };
 
     Utils.prototype = {
         constructor: Utils,
-        mouseover: function (obj) {
-            console.log('mouseover');
-        },
-        mousedown: function (obj) {
-            log(obj);
-
-            this.hasConnections(obj.index);
-        },
-        mouseout: function (obj) {
-            console.log('mouseout');
-        },
         isConnected: function (a, b) {
-            //return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index] || a.index == b.index;
+            var sources = _where(links, { 'source': a, 'target': b });
+            var targets = _where(links, { 'source': b, 'target': a });
+
+            return sources.concat(targets).length > 0;
         },
-        hasConnections: function (a) {
+        hasConnections: function (node) {
 
-            console.log(a);
-            console.log(links);
+            var sources = _where(links, { 'source': node });
+            var targets = _where(links, { 'target': node });
 
-            /*for (var property in linkedByIndex) {
-             s = property.split(",");
-             if ((s[0] == a.index || s[1] == a.index) && linkedByIndex[property]) return true;
-             }
+            return sources.concat(targets).length > 0;
+        },
+        getConnections: function(node) {
+            var sources = _where(links, { 'source': node });
+            var targets = _where(links, { 'target': node });
 
-             return false;*/
+            return sources.concat(targets);
         }
     };
 
