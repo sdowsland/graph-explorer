@@ -4,11 +4,11 @@ module.exports = (function () {
 
     var Defaults = {
         element: 'body',
-        linkStrength: 0.1,
+        linkStrength: 0.5,
         friction: 0.9,
-        linkDistance: 50,
-        charge: -30,
-        gravity: 0.5,
+        linkDistance: 60,
+        charge: -120,
+        gravity: 0.01,
         theta: 0.8,
         alpha: 0.1,
         linkColour: '#464646',
