@@ -38,13 +38,14 @@ module.exports = (function () {
             .data(links)
             .enter().append('line')
             .attr('class', 'link')
-            .style('stroke-width', function(d) { return Math.sqrt(d.value); });
+            .style('stroke', settings.linkColour)
+            .style('stroke-width', function(d) { return 1; });
 
         var node = g.selectAll('.node')
             .data(nodes)
             .enter().append('circle')
             .attr('class', 'node')
-            .attr('r', 5)
+            .attr('r', 10)
             .style('fill', function(d) { return color(d.type); })
             .call(graph.drag);
 
@@ -53,18 +54,23 @@ module.exports = (function () {
 
         node.on('mouseover', function(d) {
 
-                node.style('stroke', function(o) {
-                    return d ==o || utils.isConnected(d, o) ? 'blue' : 'white';
+                node.transition().duration(300).style('opacity', function(o){
+                    return d == o || utils.isConnected(d, o) ? '1' : '0.25';
+                });
+
+                link.transition().duration(300).style('opacity', function(o){
+                    return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
                 });
 
             })
             .on('mousedown', function(d) {
                 d3.event.stopPropagation();
-                utils.mousedown(d);
+                console.log(d);
             })
             .on('mouseout', function(d) {
 
-                node.style('stroke', 'white');
+                node.transition().duration(300).style('opacity',  '1');
+                link.transition().duration(300).style('opacity',  '1');
 
             });
 
