@@ -6,7 +6,7 @@ var Defaults = require('./defaults.js'),
 
 module.exports = (function () {
 
-    var Graph = function(nodes, links, options){
+    var Graph = function(nodeData, linkData, shapes, options){
 
         var settings = Defaults.extend({}, Defaults, options),
             zoom = d3.behavior.zoom().scaleExtent([settings.minZoom,settings.maxZoom]),
@@ -15,31 +15,33 @@ module.exports = (function () {
             element = document.getElementById(settings.element.replace('#','')),
             width = element.offsetWidth,
             height = element.offsetHeight,
-            utils = new Utils(nodes, links, settings);
+            utils = new Utils(nodeData, linkData, settings);
 
         svg.attr('width', width);
         svg.attr('height', height);
 
-        // build the arrow.
-        svg.append("svg:defs").selectAll("marker")
-            .data(["end"])      // Different link/path types can be defined here
-            .enter().append("svg:marker")    // This section adds in the arrows
-            .attr("id", String)
-            .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 27)
-            .attr("refY", 0)
-            .attr("markerWidth", 6)
-            .attr("markerHeight", 6)
-            .attr("orient", "auto")
-            .append("svg:path")
-            .attr("d", "M0,-5L10,0L0,5")
-            .style('fill', settings.linkColour);
+        if(settings.directed){
+            // build the arrow.
+            svg.append('svg:defs').selectAll('marker')
+                .data(['end'])      // Different link/path types can be defined here
+                .enter().append('svg:marker')    // This section adds in the arrows
+                .attr('id', String)
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', 27)
+                .attr('refY', 0)
+                .attr('markerWidth', 6)
+                .attr('markerHeight', 6)
+                .attr('orient', 'auto')
+                .append('svg:path')
+                .attr('d', 'M0,-5L10,0L0,5')
+                .style('fill', settings.linkColour);
+        }
 
         var color = d3.scale.category20();
 
         var graph = d3.layout.force()
-            .nodes(nodes)
-            .links(links)
+            .nodes(nodeData)
+            .links(linkData)
             .size([width, height])
             .linkStrength(settings.linkStrength)
             .friction(settings.friction)
@@ -49,44 +51,48 @@ module.exports = (function () {
             .theta(settings.theta)
             .alpha(settings.alpha);
 
-        var link = g.selectAll('.link')
-            .data(links)
+        var links = g.selectAll('.link')
+            .data(linkData)
             .enter().append('line')
             .attr('class', 'link')
             .style('stroke', settings.linkColour)
-            .style('stroke-width', function(d) { return 1; })
-            .attr("marker-end", "url(#end)");
+            .style('stroke-width', function(d) { return 1; });
 
-        var node = g.selectAll('.node')
-            .data(nodes)
-            .enter().append('circle')
+        if(settings.directed){
+            links.attr('marker-end', 'url(#end)');
+        }
+
+
+        var nodes = g.selectAll('.node')
+            .data(nodeData)
+            .enter()
+            .append('path')
+            .attr("d", d3.svg.symbol().type(function(d) { return shapes[d.type]; }).size(200))
             .attr('class', 'node')
-            .attr('r', settings.nodeRadius)
             .style('fill', function(d) { return color(d.type); })
             .style('stroke', settings.nodeStrokeColour)
             .style('stroke-width', settings.nodeStrokeWidth)
             .call(graph.drag);
 
-        node.append('title')
-            .text(function(d) { return d.id; });
+        nodes.append('title').text(function(d) { return d.name; });
 
-        node.on('mouseover', function(d)
+        nodes.on('mouseover', function(d)
             {
                 if(settings.nodeFadeOnMouseOver){
-                    node.transition().duration(300).style('opacity', function(o){
+                    nodes.transition().duration(300).style('opacity', function(o){
                         return d == o || utils.isConnected(d, o) ? '1' : '0.25';
                     });
 
-                    link.transition().duration(300).style('opacity', function(o){
+                    links.transition().duration(300).style('opacity', function(o){
                         return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
                     });
                 }
                 else {
-                    node.style('opacity', function(o){
+                    nodes.style('opacity', function(o){
                         return d == o || utils.isConnected(d, o) ? '1' : '0.25';
                     });
 
-                    link.style('opacity', function(o){
+                    links.style('opacity', function(o){
                         return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
                     });
                 }
@@ -98,19 +104,19 @@ module.exports = (function () {
             .on('mouseout', function(d) {
 
                 if(settings.nodeFadeOnMouseOver){
-                    node.transition().duration(300).style('opacity',  '1');
-                    link.transition().duration(300).style('opacity',  '1');
+                    nodes.transition().duration(300).style('opacity',  '1');
+                    links.transition().duration(300).style('opacity',  '1');
                 }
                 else {
-                    node.style('opacity',  '1');
-                    link.style('opacity',  '1');
+                    nodes.style('opacity',  '1');
+                    links.style('opacity',  '1');
                 }
 
             });
 
         if(settings.enableCentering) {
 
-            node.on('dblclick.zoom', function(d) {
+            nodes.on('dblclick.zoom', function(d) {
                 d3.event.stopPropagation();
                 var dcx = (width/2-d.x*zoom.scale());
                 var dcy = (height/2-d.y*zoom.scale());
@@ -121,13 +127,12 @@ module.exports = (function () {
 
         graph.on('tick', function() {
 
-            link.attr('x1', function(d) { return d.source.x; })
+            nodes.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+            links.attr('x1', function(d) { return d.source.x; })
                 .attr('y1', function(d) { return d.source.y; })
                 .attr('x2', function(d) { return d.target.x; })
                 .attr('y2', function(d) { return d.target.y; });
-
-            node.attr('cx', function(d) { return d.x; })
-                .attr('cy', function(d) { return d.y; });
         });
 
         zoom.on('zoom', function() {

@@ -5,6 +5,7 @@ module.exports = (function () {
     var Defaults = {
         alpha: 0.1,
         charge: -120,
+        directed: false,
         element: 'body',
         enableCentering: true,
         friction: 0.9,

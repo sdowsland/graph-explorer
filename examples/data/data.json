@@ -1,5 +1,4 @@
 {
-  "graph": [],
   "links": [
     {"source": 0, "target": 1},
     {"source": 0, "target": 2},
@@ -25,20 +24,22 @@
     {"source": 5, "target": 12},
     {"source": 6, "target": 13}],
   "nodes": [
-    {"size": 60, "score": 0, "id": "Androsynth", "type": "circle"},
-    {"size": 10, "score": 0.2, "id": "Chenjesu", "type": "circle"},
-    {"size": 60, "score": 0.4, "id": "Ilwrath", "type": "circle"},
-    {"size": 10, "score": 0.6, "id": "Mycon", "type": "circle"},
-    {"size": 60, "score": 0.8, "id": "Spathi", "type": "circle"},
-    {"size": 10, "score": 1, "id": "Umgah", "type": "circle"},
-    {"id": "VUX", "type": "circle"},
-    {"size": 60, "score": 0, "id": "Guardian", "type": "square"},
-    {"size": 10, "score": 0.2, "id": "Broodhmome", "type": "square"},
-    {"size": 60, "score": 0.4, "id": "Avenger", "type": "square"},
-    {"size": 10, "score": 0.6, "id": "Podship", "type": "square"},
-    {"size": 60, "score": 0.8, "id": "Eluder", "type": "square"},
-    {"size": 10, "score": 1, "id": "Drone", "type": "square"},
-    {"id": "Intruder", "type": "square"}],
-  "directed": false,
-  "multigraph": false
+    {"name": "Androsynth", "type": "file"},
+    {"name": "Chenjesu", "type": "file"},
+    {"name": "Ilwrath", "type": "file"},
+    {"name": "Mycon", "type": "file"},
+    {"name": "Spathi", "type": "file"},
+    {"name": "Umgah", "type": "file"},
+    {"name": "VUX", "type": "file"},
+    {"name": "Guardian", "type": "workflow"},
+    {"name": "Broodhmome", "type": "workflow"},
+    {"name": "Avenger", "type": "workflow"},
+    {"name": "Podship", "type": "workflow"},
+    {"name": "Eluder", "type": "workflow"},
+    {"name": "Drone", "type": "workflow"},
+    {"name": "Intruder", "type": "workflow"}],
+  "shapes": {
+    "file": "circle",
+    "workflow": "square"
+  }
 }
