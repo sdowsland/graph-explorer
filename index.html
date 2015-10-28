@@ -40,5 +40,24 @@
     </body>
     <footer>
         <script type="application/javascript" src="dist/graph-explorer.js"></script>
+        <script type="application/javascript">
+
+            d3.json("examples/data/data.json", function(error, data) {
+
+                var options = {
+                    element: '#graph-explorer',
+                    directed: true,
+                    labelNodes: true,
+                    linkCurved: false,
+                    friction: 0.9,
+                    gravity: 0.06,
+                    theta: 0.8
+                };
+
+                var graph = new Graph(data.nodes, data.links, data.shapes, options);
+
+            });
+
+        </script>
     </footer>
 </html>

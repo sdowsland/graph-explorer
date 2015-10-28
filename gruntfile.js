@@ -12,7 +12,10 @@ module.exports = function(grunt) {
                 src: 'src/main.js',
                 dest: 'dist/graph-explorer.js',
                 options: {
-                    exclude: ['d3']
+                    exclude: ['d3'],
+                    browserifyOptions: {
+                        standalone: 'Graph'
+                    }
                 }
             }
         },
