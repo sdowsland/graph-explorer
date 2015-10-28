@@ -4,7 +4,7 @@ var Defaults = require('./defaults.js'),
     Utils = require('./utils.js'),
     Events = require('./events.js');
 
-module.exports = (function () {
+module.exports = (function() {
 
     var Graph = function(nodeData, linkData, shapes, options){
 
@@ -37,7 +37,33 @@ module.exports = (function () {
                 .style('fill', settings.linkColour);
         }
 
-        var color = d3.scale.category20();
+        var nodes = [],
+            links = [],
+            bilinks = [];
+
+        if(settings.curvedLinks) {
+
+            nodes = nodeData.slice();
+
+            linkData.forEach(function (link) {
+                var s = nodeData[link.source],
+                    t = nodeData[link.target],
+                    i = {type:'curve'}; // intermediate node
+                nodeData.push(i);
+                links.push({source: s, target: i}, {source: i, target: t});
+                bilinks.push([s, i, t]);
+            });
+
+            console.log(bilinks);
+        }
+        else {
+            nodes = nodeData;
+            links = linkData;
+        }
+
+        var color = d3.scale.category10();
+
+        console.log(color);
 
         var graph = d3.layout.force()
             .nodes(nodeData)
@@ -46,17 +72,36 @@ module.exports = (function () {
             .linkStrength(settings.linkStrength)
             .friction(settings.friction)
             .linkDistance(settings.linkDistance)
-            .charge(settings.charge)
+            .charge(function(node) {
+                if(settings.curvedLinks && node.type == 'curve') {
+                    return settings.curvedLinksCharge;
+                }
+                else {
+                    return settings.charge;
+                }
+
+            })
             .gravity(settings.gravity)
             .theta(settings.theta)
             .alpha(settings.alpha);
 
-        var links = g.selectAll('.link')
-            .data(linkData)
-            .enter().append('line')
-            .attr('class', 'link')
-            .style('stroke', settings.linkColour)
-            .style('stroke-width', function(d) { return 1; });
+        if(settings.curvedLinks){
+            var links = g.selectAll('.link')
+                .data(bilinks)
+                .enter().append('path')
+                .attr('class', 'link')
+                .style('stroke', settings.linkColour)
+                .style('stroke-width', function(d) { return "1px"; })
+                .style('fill', 'none');
+        }
+        else {
+            var links = g.selectAll('.link')
+                .data(links)
+                .enter().append('line')
+                .attr('class', 'link')
+                .style('stroke', settings.linkColour)
+                .style('stroke-width', function(d) { return "1px"; });
+        }
 
         if(settings.directed){
             links.attr('marker-end', 'url(#end)');
@@ -64,7 +109,7 @@ module.exports = (function () {
 
 
         var nodes = g.selectAll('.node')
-            .data(nodeData)
+            .data(nodes)
             .enter()
             .append('path')
             .attr("d", d3.svg.symbol().type(function(d) { return shapes[d.type]; }).size(200))
@@ -76,6 +121,16 @@ module.exports = (function () {
 
         nodes.append('title').text(function(d) { return d.name; });
 
+        if(settings.labelNodes){
+            var text = g.selectAll(".text")
+                .data(nodeData)
+                .enter().append("text")
+                .attr("dy", "16px")
+                .style("font-size", "6px")
+                .text(function(d) { return d.name; })
+                .style("text-anchor", "middle");
+        }
+
         nodes.on('mouseover', function(d)
             {
                 if(settings.nodeFadeOnMouseOver){
@@ -84,7 +139,14 @@ module.exports = (function () {
                     });
 
                     links.transition().duration(300).style('opacity', function(o){
-                        return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+
+                        if(settings.curvedLinks){
+                            return o[0].index == d.index || o[2].index == d.index ? '1' : '0.1';
+                        }
+                        else {
+                            return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+                        }
+
                     });
                 }
                 else {
@@ -93,7 +155,14 @@ module.exports = (function () {
                     });
 
                     links.style('opacity', function(o){
-                        return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+
+                        if(settings.curvedLinks){
+                            return o[0].index == d.index || o[2].index == d.index ? '1' : '0.1';
+                        }
+                        else {
+                            return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+                        }
+
                     });
                 }
             })
@@ -127,12 +196,29 @@ module.exports = (function () {
 
         graph.on('tick', function() {
 
+            if(settings.labelNodes) {
+                text.attr("transform", function (d) {
+                    return "translate(" + d.x + "," + d.y + ")";
+                });
+            }
+
             nodes.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 
-            links.attr('x1', function(d) { return d.source.x; })
-                .attr('y1', function(d) { return d.source.y; })
-                .attr('x2', function(d) { return d.target.x; })
-                .attr('y2', function(d) { return d.target.y; });
+            if(settings.curvedLinks){
+
+                links.attr("d", function(d) {
+                    return "M" + d[0].x + "," + d[0].y
+                        + "S" + d[1].x + "," + d[1].y
+                        + " " + d[2].x + "," + d[2].y;
+                });
+            }
+            else {
+                links.attr('x1', function(d) { return d.source.x; })
+                    .attr('y1', function(d) { return d.source.y; })
+                    .attr('x2', function(d) { return d.target.x; })
+                    .attr('y2', function(d) { return d.target.y; });
+            }
+
         });
 
         zoom.on('zoom', function() {

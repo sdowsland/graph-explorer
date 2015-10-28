@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Graph = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /**
  * lodash 3.1.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -2280,12 +2280,15 @@ module.exports = (function () {
     var Defaults = {
         alpha: 0.1,
         charge: -120,
+        curvedLinks: false,
+        curvedLinksCharge: -10,
         directed: false,
         element: 'body',
         enableCentering: true,
         friction: 0.9,
         gravity: 0.01,
-        linkColour: '#464646',
+        labelNodes: true,
+        linkColour: '#999999',
         linkDistance: 60,
         linkOpacity: 0.6,
         linkStrength: 0.5,
@@ -2387,7 +2390,7 @@ var Defaults = require('./defaults.js'),
     Utils = require('./utils.js'),
     Events = require('./events.js');
 
-module.exports = (function () {
+module.exports = (function() {
 
     var Graph = function(nodeData, linkData, shapes, options){
 
@@ -2420,7 +2423,33 @@ module.exports = (function () {
                 .style('fill', settings.linkColour);
         }
 
-        var color = d3.scale.category20();
+        var nodes = [],
+            links = [],
+            bilinks = [];
+
+        if(settings.curvedLinks) {
+
+            nodes = nodeData.slice();
+
+            linkData.forEach(function (link) {
+                var s = nodeData[link.source],
+                    t = nodeData[link.target],
+                    i = {type:'curve'}; // intermediate node
+                nodeData.push(i);
+                links.push({source: s, target: i}, {source: i, target: t});
+                bilinks.push([s, i, t]);
+            });
+
+            console.log(bilinks);
+        }
+        else {
+            nodes = nodeData;
+            links = linkData;
+        }
+
+        var color = d3.scale.category10();
+
+        console.log(color);
 
         var graph = d3.layout.force()
             .nodes(nodeData)
@@ -2429,17 +2458,36 @@ module.exports = (function () {
             .linkStrength(settings.linkStrength)
             .friction(settings.friction)
             .linkDistance(settings.linkDistance)
-            .charge(settings.charge)
+            .charge(function(node) {
+                if(settings.curvedLinks && node.type == 'curve') {
+                    return settings.curvedLinksCharge;
+                }
+                else {
+                    return settings.charge;
+                }
+
+            })
             .gravity(settings.gravity)
             .theta(settings.theta)
             .alpha(settings.alpha);
 
-        var links = g.selectAll('.link')
-            .data(linkData)
-            .enter().append('line')
-            .attr('class', 'link')
-            .style('stroke', settings.linkColour)
-            .style('stroke-width', function(d) { return 1; });
+        if(settings.curvedLinks){
+            var links = g.selectAll('.link')
+                .data(bilinks)
+                .enter().append('path')
+                .attr('class', 'link')
+                .style('stroke', settings.linkColour)
+                .style('stroke-width', function(d) { return "1px"; })
+                .style('fill', 'none');
+        }
+        else {
+            var links = g.selectAll('.link')
+                .data(links)
+                .enter().append('line')
+                .attr('class', 'link')
+                .style('stroke', settings.linkColour)
+                .style('stroke-width', function(d) { return "1px"; });
+        }
 
         if(settings.directed){
             links.attr('marker-end', 'url(#end)');
@@ -2447,7 +2495,7 @@ module.exports = (function () {
 
 
         var nodes = g.selectAll('.node')
-            .data(nodeData)
+            .data(nodes)
             .enter()
             .append('path')
             .attr("d", d3.svg.symbol().type(function(d) { return shapes[d.type]; }).size(200))
@@ -2459,6 +2507,16 @@ module.exports = (function () {
 
         nodes.append('title').text(function(d) { return d.name; });
 
+        if(settings.labelNodes){
+            var text = g.selectAll(".text")
+                .data(nodeData)
+                .enter().append("text")
+                .attr("dy", "16px")
+                .style("font-size", "6px")
+                .text(function(d) { return d.name; })
+                .style("text-anchor", "middle");
+        }
+
         nodes.on('mouseover', function(d)
             {
                 if(settings.nodeFadeOnMouseOver){
@@ -2467,7 +2525,14 @@ module.exports = (function () {
                     });
 
                     links.transition().duration(300).style('opacity', function(o){
-                        return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+
+                        if(settings.curvedLinks){
+                            return o[0].index == d.index || o[2].index == d.index ? '1' : '0.1';
+                        }
+                        else {
+                            return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+                        }
+
                     });
                 }
                 else {
@@ -2476,7 +2541,14 @@ module.exports = (function () {
                     });
 
                     links.style('opacity', function(o){
-                        return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+
+                        if(settings.curvedLinks){
+                            return o[0].index == d.index || o[2].index == d.index ? '1' : '0.1';
+                        }
+                        else {
+                            return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+                        }
+
                     });
                 }
             })
@@ -2510,12 +2582,29 @@ module.exports = (function () {
 
         graph.on('tick', function() {
 
+            if(settings.labelNodes) {
+                text.attr("transform", function (d) {
+                    return "translate(" + d.x + "," + d.y + ")";
+                });
+            }
+
             nodes.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 
-            links.attr('x1', function(d) { return d.source.x; })
-                .attr('y1', function(d) { return d.source.y; })
-                .attr('x2', function(d) { return d.target.x; })
-                .attr('y2', function(d) { return d.target.y; });
+            if(settings.curvedLinks){
+
+                links.attr("d", function(d) {
+                    return "M" + d[0].x + "," + d[0].y
+                        + "S" + d[1].x + "," + d[1].y
+                        + " " + d[2].x + "," + d[2].y;
+                });
+            }
+            else {
+                links.attr('x1', function(d) { return d.source.x; })
+                    .attr('y1', function(d) { return d.source.y; })
+                    .attr('x2', function(d) { return d.target.x; })
+                    .attr('y2', function(d) { return d.target.y; });
+            }
+
         });
 
         zoom.on('zoom', function() {
@@ -2551,20 +2640,7 @@ module.exports = (function () {
 
     return Graph;
 })();
-},{"./defaults.js":31,"./events.js":32,"./utils.js":35}],34:[function(require,module,exports){
-var Graph = require('./graph.js');
-
-d3.json("examples/data/data.json", function(error, data) {
-
-    var options = {
-        element: '#graph-explorer',
-        directed: true
-    };
-
-    var graph = new Graph(data.nodes, data.links, data.shapes, options);
-
-});
-},{"./graph.js":33}],35:[function(require,module,exports){
+},{"./defaults.js":31,"./events.js":32,"./utils.js":34}],34:[function(require,module,exports){
 'use strict';
 
 var _where = require('lodash.where');
@@ -2609,4 +2685,5 @@ module.exports = (function(){
 }());
 
 
-},{"lodash.where":1}]},{},[34]);
+},{"lodash.where":1}]},{},[33])(33)
+});
