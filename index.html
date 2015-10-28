@@ -48,10 +48,8 @@
                     element: '#graph-explorer',
                     directed: true,
                     labelNodes: true,
-                    linkCurved: false,
-                    friction: 0.9,
-                    gravity: 0.06,
-                    theta: 0.8
+                    curvedLinks: false,
+                    gravity: 0.10
                 };
 
                 var graph = new Graph(data.nodes, data.links, data.shapes, options);

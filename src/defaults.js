@@ -5,6 +5,8 @@ module.exports = (function () {
     var Defaults = {
         alpha: 0.1,
         charge: -120,
+        curvedLinks: false,
+        curvedLinksCharge: -10,
         directed: false,
         element: 'body',
         enableCentering: true,
@@ -15,7 +17,6 @@ module.exports = (function () {
         linkDistance: 60,
         linkOpacity: 0.6,
         linkStrength: 0.5,
-        linkCurved: false,
         maxZoom: 8,
         minZoom: 0.5,
         nodeFadeOnMouseOver: true,

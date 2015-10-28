@@ -41,14 +41,14 @@ module.exports = (function() {
             links = [],
             bilinks = [];
 
-        if(settings.linkCurved) {
+        if(settings.curvedLinks) {
 
             nodes = nodeData.slice();
 
             linkData.forEach(function (link) {
                 var s = nodeData[link.source],
                     t = nodeData[link.target],
-                    i = {}; // intermediate node
+                    i = {type:'curve'}; // intermediate node
                 nodeData.push(i);
                 links.push({source: s, target: i}, {source: i, target: t});
                 bilinks.push([s, i, t]);
@@ -72,12 +72,20 @@ module.exports = (function() {
             .linkStrength(settings.linkStrength)
             .friction(settings.friction)
             .linkDistance(settings.linkDistance)
-            .charge(settings.charge)
+            .charge(function(node) {
+                if(settings.curvedLinks && node.type == 'curve') {
+                    return settings.curvedLinksCharge;
+                }
+                else {
+                    return settings.charge;
+                }
+
+            })
             .gravity(settings.gravity)
             .theta(settings.theta)
             .alpha(settings.alpha);
 
-        if(settings.linkCurved){
+        if(settings.curvedLinks){
             var links = g.selectAll('.link')
                 .data(bilinks)
                 .enter().append('path')
@@ -131,7 +139,14 @@ module.exports = (function() {
                     });
 
                     links.transition().duration(300).style('opacity', function(o){
-                        return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+
+                        if(settings.curvedLinks){
+                            return o[0].index == d.index || o[2].index == d.index ? '1' : '0.1';
+                        }
+                        else {
+                            return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+                        }
+
                     });
                 }
                 else {
@@ -140,7 +155,14 @@ module.exports = (function() {
                     });
 
                     links.style('opacity', function(o){
-                        return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+
+                        if(settings.curvedLinks){
+                            return o[0].index == d.index || o[2].index == d.index ? '1' : '0.1';
+                        }
+                        else {
+                            return o.source.index == d.index || o.target.index == d.index ? '1' : '0.1';
+                        }
+
                     });
                 }
             })
@@ -182,12 +204,9 @@ module.exports = (function() {
 
             nodes.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 
-            if(settings.linkCurved){
+            if(settings.curvedLinks){
 
                 links.attr("d", function(d) {
-
-                    console.log(d);
-
                     return "M" + d[0].x + "," + d[0].y
                         + "S" + d[1].x + "," + d[1].y
                         + " " + d[2].x + "," + d[2].y;
